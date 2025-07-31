@@ -15,6 +15,7 @@ dependencies {
     implementation("io.ktor:ktor-server-call-logging:3.0.0")
     implementation("io.ktor:ktor-server-content-negotiation:3.0.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+    implementation("ch.qos.logback:logback-classic:1.4.11")
     implementation("io.ktor:ktor-server-websockets:3.0.0")
     implementation("io.modelcontextprotocol:kotlin-sdk:0.6.0")
 }
