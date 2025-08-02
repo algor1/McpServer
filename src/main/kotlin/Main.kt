@@ -1,5 +1,6 @@
 import io.ktor.server.cio.CIO
 import io.ktor.server.engine.embeddedServer
+import java.io.File
 import io.modelcontextprotocol.kotlin.sdk.CallToolResult
 import io.modelcontextprotocol.kotlin.sdk.GetPromptResult
 import io.modelcontextprotocol.kotlin.sdk.Implementation
@@ -15,6 +16,8 @@ import io.modelcontextprotocol.kotlin.sdk.server.Server
 import io.modelcontextprotocol.kotlin.sdk.server.ServerOptions
 import io.modelcontextprotocol.kotlin.sdk.server.mcp
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 
 fun main(args: Array<String>): Unit = runBlocking {
     val port = args.getOrNull(1)?.toIntOrNull() ?: 3001
@@ -80,6 +83,28 @@ fun configureServer(): Server {
         )
     }
 
+    server.addTool(
+        name = "save-file",
+        description = "Save content to a file",
+        inputSchema = Tool.Input(
+            properties = buildJsonObject {
+                put("path", JsonPrimitive("string"))
+                put("content", JsonPrimitive("string"))
+                },
+            required = listOf("path", "content")
+        ),
+        outputSchema = Tool.Output(
+            properties = buildJsonObject {
+                put("success", JsonPrimitive("boolean"))
+                put("message", JsonPrimitive("string"))
+            }
+        )
+    ){ request -> saveFile()
+
+            }
+
+
+
     // Add a resource
     server.addResource(
         uri = "https://search.com/",
@@ -95,4 +120,15 @@ fun configureServer(): Server {
     }
 
     return server
+}
+
+fun saveFile(): Pair<Boolean, String> = saveFile("test.txt", "Hello, world!")
+
+fun saveFile(path: String, content: String): Pair<Boolean, String> {
+    return try {
+        File(path).writeText(content)
+        true to "File saved successfully"
+    } catch (e: Exception) {
+        false to "Failed to save file: ${e.message}"
+    }
 }
