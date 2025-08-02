@@ -1,5 +1,6 @@
 import io.ktor.server.cio.CIO
 import io.ktor.server.engine.embeddedServer
+import io.modelcontextprotocol.kotlin.sdk.CallToolRequest
 import java.io.File
 import io.modelcontextprotocol.kotlin.sdk.CallToolResult
 import io.modelcontextprotocol.kotlin.sdk.GetPromptResult
@@ -12,6 +13,8 @@ import io.modelcontextprotocol.kotlin.sdk.ServerCapabilities
 import io.modelcontextprotocol.kotlin.sdk.TextContent
 import io.modelcontextprotocol.kotlin.sdk.TextResourceContents
 import io.modelcontextprotocol.kotlin.sdk.Tool
+import io.modelcontextprotocol.kotlin.sdk.error
+import io.modelcontextprotocol.kotlin.sdk.ok
 import io.modelcontextprotocol.kotlin.sdk.server.Server
 import io.modelcontextprotocol.kotlin.sdk.server.ServerOptions
 import io.modelcontextprotocol.kotlin.sdk.server.mcp
@@ -92,18 +95,10 @@ fun configureServer(): Server {
                 put("content", JsonPrimitive("string"))
                 },
             required = listOf("path", "content")
-        ),
-        outputSchema = Tool.Output(
-            properties = buildJsonObject {
-                put("success", JsonPrimitive("boolean"))
-                put("message", JsonPrimitive("string"))
-            }
         )
-    ){ request -> saveFile()
+    ){ request -> saveFile(request)
 
             }
-
-
 
     // Add a resource
     server.addResource(
@@ -122,7 +117,18 @@ fun configureServer(): Server {
     return server
 }
 
-fun saveFile(): Pair<Boolean, String> = saveFile("test.txt", "Hello, world!")
+fun saveFile(request: CallToolRequest): CallToolResult {
+    val path = request.arguments["path"]?.toString()?.trim('"')  ?: return CallToolResult.error("Path argument is required")
+    val content = request.arguments["content"]?.toString()?.trim('"')  ?: return CallToolResult.error("Content argument is required")
+
+
+    val (success, message) = saveFile(path, content)
+    if (!success) {
+        return CallToolResult.error(message)
+    }
+
+    return CallToolResult.ok("Successfully saved file to $path")
+}
 
 fun saveFile(path: String, content: String): Pair<Boolean, String> {
     return try {
