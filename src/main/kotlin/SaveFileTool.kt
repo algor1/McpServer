@@ -22,7 +22,7 @@ class SaveFileTool(val safeFileManager: SafeFileManager) {
         annotations = null
     ) to { request -> saveFile(request) }
 
-    fun saveFile(request: CallToolRequest): CallToolResult {
+    private fun saveFile(request: CallToolRequest): CallToolResult {
         val path = request.arguments["path"]?.toString()?.trim('"')  ?: return CallToolResult.error("Path argument is required")
         val content = request.arguments["content"]?.toString()?.trim('"')  ?: return CallToolResult.error("Content argument is required")
         val (success, message) = safeFileManager.writeFile(path, content)
@@ -31,5 +31,33 @@ class SaveFileTool(val safeFileManager: SafeFileManager) {
         }
 
         return CallToolResult.ok("Successfully saved file to $path")
+    }
+}
+
+class LoadFileTool(val safeFileManager: SafeFileManager) {
+
+    fun create(): Pair<Tool, suspend (CallToolRequest) -> CallToolResult> = Tool(
+        name = "load-file",
+        description = "Load a file content",
+        inputSchema = Tool.Input(
+            properties = buildJsonObject {
+                put("path", JsonPrimitive("string"))
+            },
+            required = listOf("path")
+        ),
+        outputSchema = Tool.Output(properties = buildJsonObject {
+            put("content", JsonPrimitive("string"))
+        },),
+        annotations = null
+    ) to { request -> loadFile(request) }
+
+    private fun loadFile(request: CallToolRequest): CallToolResult {
+        val path = request.arguments["path"]?.toString()?.trim('"') ?: return CallToolResult.error("Path argument is required")
+        val (success, content) = safeFileManager.readFile(path)
+        if (!success) {
+            return CallToolResult.error(content)
+        }
+
+        return CallToolResult.ok(content)
     }
 }

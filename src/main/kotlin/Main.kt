@@ -22,9 +22,10 @@ fun main(args: Array<String>): Unit = runBlocking {
 private fun createTools(rootPath: String): List<Pair<Tool,suspend (CallToolRequest) -> CallToolResult>> {
 
     val safeFileManager = SafeFileManager(rootPath)
-    val savefileTool = SaveFileTool(safeFileManager)
+    val saveFileTool = SaveFileTool(safeFileManager)
+    val loadFileTool = LoadFileTool(safeFileManager)
 
-    return listOf(savefileTool.create())
+    return listOf(saveFileTool.create(), loadFileTool.create())
 }
 
 suspend fun runSseMcpServer(port: Int, tools: List<Pair<Tool, suspend (CallToolRequest) -> CallToolResult>>) {
