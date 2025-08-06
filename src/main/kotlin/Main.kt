@@ -12,8 +12,8 @@ import kotlinx.coroutines.runBlocking
 
 fun main(args: Array<String>): Unit = runBlocking {
     val port = args.getOrNull(1)?.toIntOrNull() ?: 3001
-    val rootPath = args.getOrNull(0) ?: "."
-
+    val rootPath = args.getOrNull(0) ?: ""
+    println("Set root path to $rootPath")
     val tools = createTools(rootPath)
 
     runSseMcpServer(port, tools)
