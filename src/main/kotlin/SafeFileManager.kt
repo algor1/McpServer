@@ -41,4 +41,40 @@ class SafeFileManager(baseDir: String) {
             false to "Failed to read file: ${e.message}"
         }
     }
+
+    fun mkdir(relativePath: String): Pair<Boolean, String> {
+        return try {
+            val dir = resolveSafe(relativePath).toFile()
+            if (dir.exists()) {
+                if (dir.isDirectory) {
+                    true to "Directory already exists"
+                } else {
+                    false to "A file with the same name already exists: $dir"
+                }
+            } else {
+                if (dir.mkdirs()) {
+                    true to "Directory created successfully"
+                } else {
+                    false to "Failed to create directory: $dir"
+                }
+            }
+        } catch (e: Exception) {
+            false to "Error creating directory: ${e.message}"
+        }
+    }
+}
+
+class GradleManager(val safeFileManager: SafeFileManager) {
+    fun createProject(directoryName: String, projectName: String): Pair<Boolean, String> {
+        return try {
+            val mkdirResult = safeFileManager.mkdir(directoryName)
+            if (!mkdirResult.first) return mkdirResult
+            val process = ProcessBuilder("gradle", "init", "--dsl", "kotlin", "--use-defaults", "--type", "kotlin-application", "--project-name", projectName).start()
+            process.waitFor()
+            true to "Project created successfully"
+        } catch (e: Exception) {
+            false to "Failed to create project: ${e.message}"
+        }
+    }
+
 }

@@ -36,6 +36,7 @@ class SaveFileTool(val safeFileManager: SafeFileManager) {
 
 class LoadFileTool(val safeFileManager: SafeFileManager) {
 
+
     fun create(): Pair<Tool, suspend (CallToolRequest) -> CallToolResult> = Tool(
         name = "load-file",
         description = "Load a file content",
@@ -54,6 +55,43 @@ class LoadFileTool(val safeFileManager: SafeFileManager) {
     private fun loadFile(request: CallToolRequest): CallToolResult {
         val path = request.arguments["path"]?.toString()?.trim('"') ?: return CallToolResult.error("Path argument is required")
         val (success, content) = safeFileManager.readFile(path)
+        if (!success) {
+            return CallToolResult.error(content)
+        }
+
+        return CallToolResult.ok(content)
+    }
+}
+
+class GradleCreateKotlinProjectTool(val safeFileManager: SafeFileManager) {
+    val gradleManager = GradleManager(safeFileManager)
+
+    fun create(): Pair<Tool, suspend (CallToolRequest) -> CallToolResult> = Tool(
+        name = "create-kotlin-project",
+        description = "Create a Kotlin project",
+        inputSchema = Tool.Input(
+            properties = buildJsonObject {
+                put("directoryName", JsonPrimitive("string"))
+                put("projectName", JsonPrimitive("string"))
+            },
+            required = listOf("projectName")
+        ),
+        outputSchema = Tool.Output(properties = buildJsonObject {
+            put("directoryName", JsonPrimitive("string"))
+        },),
+        annotations = null
+    ) to { request -> createProject(request) }
+
+    private fun createProject(request: CallToolRequest): CallToolResult {
+
+        val directoryName = if (request.arguments["directoryName"]?.toString()?.trim('"') == null)
+                "kotlin-project"
+            else
+                request.arguments["directoryName"]?.toString()?.trim('"')
+
+        val projectName = request.arguments["projectName"]?.toString()?.trim('"') ?: return CallToolResult.error("projectName argument is required")
+
+        val (success, content) = gradleManager.createProject(directoryName, projectName)
         if (!success) {
             return CallToolResult.error(content)
         }
