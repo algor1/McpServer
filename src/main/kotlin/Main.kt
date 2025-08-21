@@ -24,8 +24,9 @@ private fun createTools(rootPath: String): List<Pair<Tool,suspend (CallToolReque
     val safeFileManager = SafeFileManager(rootPath)
     val saveFileTool = SaveFileTool(safeFileManager)
     val loadFileTool = LoadFileTool(safeFileManager)
+    val gradleCreateKotlinProjectTool = GradleCreateKotlinProjectTool(safeFileManager)
 
-    return listOf(saveFileTool.create(), loadFileTool.create())
+    return listOf(saveFileTool.create(), loadFileTool.create(), gradleCreateKotlinProjectTool.create())
 }
 
 suspend fun runSseMcpServer(port: Int, tools: List<Pair<Tool, suspend (CallToolRequest) -> CallToolResult>>) {

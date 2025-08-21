@@ -47,13 +47,13 @@ class SafeFileManager(baseDir: String) {
             val dir = resolveSafe(relativePath).toFile()
             if (dir.exists()) {
                 if (dir.isDirectory) {
-                    true to "Directory already exists"
+                    true to dir.absolutePath
                 } else {
                     false to "A file with the same name already exists: $dir"
                 }
             } else {
                 if (dir.mkdirs()) {
-                    true to "Directory created successfully"
+                    true to dir.absolutePath
                 } else {
                     false to "Failed to create directory: $dir"
                 }
@@ -69,7 +69,9 @@ class GradleManager(val safeFileManager: SafeFileManager) {
         return try {
             val mkdirResult = safeFileManager.mkdir(directoryName)
             if (!mkdirResult.first) return mkdirResult
-            val process = ProcessBuilder("gradle", "init", "--dsl", "kotlin", "--use-defaults", "--type", "kotlin-application", "--project-name", projectName).start()
+            val process = ProcessBuilder("gradle", "init", "--dsl", "kotlin", "--use-defaults", "--type", "kotlin-application", "--project-name", projectName)
+                .directory(Paths.get(mkdirResult.second).toFile())
+                .start()
             process.waitFor()
             true to "Project created successfully"
         } catch (e: Exception) {
