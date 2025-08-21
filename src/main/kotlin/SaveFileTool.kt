@@ -6,6 +6,9 @@ import io.modelcontextprotocol.kotlin.sdk.ok
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 
+private fun getTrimmedArg(request: CallToolRequest, name: String): String? =
+    request.arguments[name]?.toString()?.trim('"')
+
 class SaveFileTool(val safeFileManager: SafeFileManager) {
 
     fun create(): Pair<Tool, suspend (CallToolRequest) -> CallToolResult> = Tool(
@@ -23,8 +26,10 @@ class SaveFileTool(val safeFileManager: SafeFileManager) {
     ) to { request -> saveFile(request) }
 
     private fun saveFile(request: CallToolRequest): CallToolResult {
-        val path = request.arguments["path"]?.toString()?.trim('"')  ?: return CallToolResult.error("Path argument is required")
-        val content = request.arguments["content"]?.toString()?.trim('"')  ?: return CallToolResult.error("Content argument is required")
+        val path = getTrimmedArg(request,"path")
+            ?: return CallToolResult.error("Path argument is required")
+        val content = getTrimmedArg(request,"content")
+            ?: return CallToolResult.error("Content argument is required")
         val (success, message) = safeFileManager.writeFile(path, content)
         if (!success) {
             return CallToolResult.error(message)
@@ -53,7 +58,8 @@ class LoadFileTool(val safeFileManager: SafeFileManager) {
     ) to { request -> loadFile(request) }
 
     private fun loadFile(request: CallToolRequest): CallToolResult {
-        val path = request.arguments["path"]?.toString()?.trim('"') ?: return CallToolResult.error("Path argument is required")
+        val path = getTrimmedArg(request,"path")
+            ?: return CallToolResult.error("Path argument is required")
         val (success, content) = safeFileManager.readFile(path)
         if (!success) {
             return CallToolResult.error(content)
@@ -65,6 +71,9 @@ class LoadFileTool(val safeFileManager: SafeFileManager) {
 
 class GradleCreateKotlinProjectTool(val safeFileManager: SafeFileManager) {
     val gradleManager = GradleManager(safeFileManager)
+    private companion object {
+        const val DEFAULT_DIRECTORY = "kotlin-project"
+    }
 
     fun create(): Pair<Tool, suspend (CallToolRequest) -> CallToolResult> = Tool(
         name = "create-kotlin-project",
@@ -84,12 +93,9 @@ class GradleCreateKotlinProjectTool(val safeFileManager: SafeFileManager) {
 
     private fun createProject(request: CallToolRequest): CallToolResult {
 
-        val directoryName = if (request.arguments["directoryName"]?.toString()?.trim('"') == null)
-                "kotlin-project"
-            else
-                request.arguments["directoryName"]?.toString()?.trim('"')
-
-        val projectName = request.arguments["projectName"]?.toString()?.trim('"') ?: return CallToolResult.error("projectName argument is required")
+        val directoryName: String = getTrimmedArg(request, "directoryName") ?: DEFAULT_DIRECTORY
+        val projectName: String = getTrimmedArg(request, "projectName")
+            ?: return CallToolResult.error("projectName argument is required")
 
         val (success, content) = gradleManager.createProject(directoryName, projectName)
         if (!success) {
