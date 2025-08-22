@@ -62,6 +62,25 @@ class SafeFileManager(baseDir: String) {
             false to "Error creating directory: ${e.message}"
         }
     }
+
+    fun readDir(relativePath: String): Pair<Boolean, String> {
+        return try {
+            val dir = resolveSafe(relativePath).toFile()
+            if (!dir.exists()) {
+                false to "Directory not found: $dir"
+            }
+
+            if (!dir.isDirectory){
+                false to "The specified path is not a directory: $dir"
+            }
+
+            val dirList = dir.list()?.joinToString("\n") ?: ""
+            true to dirList
+        }
+        catch (e: Exception) {
+            false to "Error reading directory: ${e.message}"
+        }
+    }
 }
 
 class GradleManager(val safeFileManager: SafeFileManager) {

@@ -69,6 +69,34 @@ class LoadFileTool(val safeFileManager: SafeFileManager) {
     }
 }
 
+class ReadDirTool(val safeFileManager: SafeFileManager) {
+    fun create(): Pair<Tool, suspend (CallToolRequest) -> CallToolResult> = Tool(
+        name = "read-directory",
+        description = "read directory content",
+        inputSchema = Tool.Input(
+            properties = buildJsonObject {
+                put("path", JsonPrimitive("string"))
+            },
+            required = listOf("path")
+        ),
+        outputSchema = Tool.Output(properties = buildJsonObject {
+            put("content", JsonPrimitive("string"))
+        },),
+        annotations = null
+    ) to { request -> readDir(request) }
+
+    private fun readDir(request: CallToolRequest): CallToolResult {
+        val path = getTrimmedArg(request,"path")
+            ?: return CallToolResult.error("Path argument is required")
+        val (success, content) = safeFileManager.readDir(path)
+        if (!success) {
+            return CallToolResult.error(content)
+        }
+
+        return CallToolResult.ok(content)
+    }
+}
+
 class GradleCreateKotlinProjectTool(safeFileManager: SafeFileManager) {
     val gradleManager = GradleManager(safeFileManager)
     private companion object {

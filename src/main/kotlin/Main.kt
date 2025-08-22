@@ -24,9 +24,13 @@ private fun createTools(rootPath: String): List<Pair<Tool,suspend (CallToolReque
     val safeFileManager = SafeFileManager(rootPath)
     val saveFileTool = SaveFileTool(safeFileManager)
     val loadFileTool = LoadFileTool(safeFileManager)
+    val readDirTool = ReadDirTool(safeFileManager)
     val gradleCreateKotlinProjectTool = GradleCreateKotlinProjectTool(safeFileManager)
 
-    return listOf(saveFileTool.create(), loadFileTool.create(), gradleCreateKotlinProjectTool.create())
+    return listOf(saveFileTool.create(),
+        loadFileTool.create(),
+        readDirTool.create(),
+        gradleCreateKotlinProjectTool.create())
 }
 
 suspend fun runSseMcpServer(port: Int, tools: List<Pair<Tool, suspend (CallToolRequest) -> CallToolResult>>) {
@@ -43,7 +47,7 @@ suspend fun runSseMcpServer(port: Int, tools: List<Pair<Tool, suspend (CallToolR
 fun configureServer(tools: List<Pair<Tool, suspend (CallToolRequest) -> CallToolResult>>): Server {
     val server = Server(
         Implementation(
-            name = "mcp-kotlin test server",
+            name = "mcp-kotlin server",
             version = "0.1.0"
         ),
         ServerOptions(
