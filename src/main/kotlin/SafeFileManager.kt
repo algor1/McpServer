@@ -69,7 +69,7 @@ class GradleManager(val safeFileManager: SafeFileManager) {
         return try {
             val mkdirResult = safeFileManager.mkdir(directoryName)
             if (!mkdirResult.first) return mkdirResult
-            val process = ProcessBuilder("gradle", "init", "--dsl", "kotlin", "--use-defaults", "--type", "kotlin-application", "--project-name", projectName)
+            val process = ProcessBuilder( "cmd", "/c", "gradle", "init", "--dsl", "kotlin", "--use-defaults", "--type", "kotlin-application", "--project-name", projectName)
                 .directory(Paths.get(mkdirResult.second).toFile())
                 .start()
             process.waitFor()

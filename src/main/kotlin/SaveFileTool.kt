@@ -69,7 +69,7 @@ class LoadFileTool(val safeFileManager: SafeFileManager) {
     }
 }
 
-class GradleCreateKotlinProjectTool(val safeFileManager: SafeFileManager) {
+class GradleCreateKotlinProjectTool(safeFileManager: SafeFileManager) {
     val gradleManager = GradleManager(safeFileManager)
     private companion object {
         const val DEFAULT_DIRECTORY = "kotlin-project"
